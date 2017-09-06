@@ -1,0 +1,31 @@
+Design overview:
+
+Arenas:
+    The main thread maintain a main_arena, and for each request of malloc, first check if the pid is the same with the corresponding arena, if there is no arena that has the pid, then assign a new arena to the thread. 
+
+Bins:
+    This malloc uses 4 bins to allocate memory of different sizes:
+	* 16 bytes
+	* 64 bytes
+	* 512 bytes
+	* Memory size larger then 512 bytes
+    A double linked-list is used to represent bins.
+
+Blocks:
+    For each memory block, we have:
+	* a previus ptr and a next ptr to reference adjacent blocks
+	* a size variable to record the size of the block
+	* a ptr to point to the user data section
+	* a char data[1] to indicates the start point of the user data section, also to be referenced by ptr to check correctness
+	* a free variable to indicates whether the block is free
+
+    During each operation of *bins, a mutex lock was implemented to protect under contention situations.
+    Another mutex lock was implemented during the calloc since it uses one for malloc() already
+
+Design decisions:
+    Use double linked list for blocks to be easier for reference.
+    In the bin struct, use a ptr and char data[1] to avoid reference error
+    Each arena by default has 10 * page size space to begin with
+
+To be improved:
+1. Efficiency to be improved
